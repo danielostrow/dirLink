@@ -103,13 +103,14 @@ def normalize_links(links)
   normalized_links.uniq
 end
 
+# MAIN -- 
 def main(directory_path)
   links = extract_links_from_directory(directory_path)
   normalized_links = normalize_links(links)
   output = { links: normalized_links }.to_json
   puts output
 end
-
+# Display help if user does not specify a directory path
 if ARGV.empty?
   puts "Usage: ruby link_extractor.rb directory_path"
   exit
