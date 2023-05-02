@@ -1,2 +1,2 @@
 # dirLink
-Crawl Directory to collect all url's
+Tool is used to extract all links within a given directory.
