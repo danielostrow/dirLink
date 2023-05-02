@@ -83,18 +83,30 @@ end
 
 def extract_links_from_directory(directory_path)
   links = []
-  Dir.glob("#{directory_path}/*") do |file|
+  files_with_errors = []
+
+  Dir.glob("#{directory_path}/**/*") do |file|
     next if File.directory?(file)
-    links += extract_links_from_file(file)
+
+    begin
+      links += extract_links_from_file(file)
+    rescue StandardError => e
+      puts "Error processing file #{file}: #{e.message}"
+      files_with_errors << file
+      next
+    end
   end
+
+  puts "The following files could not be processed: #{files_with_errors.join(', ')}" if files_with_errors.any?
   links
 end
+
 
 def normalize_links(links)
   normalized_links = []
   links.each do |link|
     begin
-      normalized_link = URI.decode(URI(link.strip).to_s)
+      normalized_link = URI.decode_www_form_component(URI(link.strip).to_s)
       normalized_links << normalized_link if URI.parse(normalized_link).scheme
     rescue URI::InvalidURIError
       next
@@ -104,17 +116,19 @@ def normalize_links(links)
 end
 
 # MAIN -- 
-def main(directory_path)
+def main(directory_path, output_path)
   links = extract_links_from_directory(directory_path)
   normalized_links = normalize_links(links)
   output = { links: normalized_links }.to_json
-  puts output
+  File.write(output_path, output) # write output to file
 end
-# Display help if user does not specify a directory path
-if ARGV.empty?
-  puts "Usage: ruby link_extractor.rb directory_path"
-  exit
+
+# execution helper
+if ARGV.empty? || ARGV.size < 2
+puts "Usage: ruby link_extractor.rb directory_path output_file_path"
+exit
 end
 
 directory_path = ARGV[0]
-main(directory_path)
+output_file_path = ARGV[1]
+main(directory_path, output_file_path)
